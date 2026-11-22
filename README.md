@@ -9,26 +9,30 @@ for snowglobe irl event
 
 ## how do you use it?
 
-…
+Use WASD or Arrow keys to move player around. Shoot at enemies by pressing [space] and continue playing until the tenth level, as the objective is to slay the boss there. If you die, press [r] to restart the game.
 
-## how we built it
+## how I built it
 
-languages, frameworks, libraries and APIs we used. any template, starter or tutorial we built on.
+language: python
+libraries: pygame, random, pathlib
 
 ## run it yourself
 
-1. clone the repo
-2. install dependencies: `…`
-3. copy `.env.example` to `.env` and fill in: `…`
-4. start it: `…`
+1. download the zip file
+2. unzip the file
+3. run the .exe file
 
-## what was hard, and how we fixed it
+## what was hard, and how I fixed it
 
-…
+Coding the boss and level system was pretty hard for me because I kept messing up indents which messed up the whole game loop in general, otherwise I kept on missing colons or adding double the amount of collons, but it was just minor mistakes I kept on skipping over s I didn't suspect them being the problem and my eyes skipped over them, resulting in a big challenge and the time consumption.
 
 ## what's next
 
-…
+o music
+o animations
+o more levels
+o more enemies
+o sound effects
 
 ## creds:
 

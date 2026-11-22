@@ -1,6 +1,5 @@
 import pygame
 import random
-import asyncio
 from pathlib import Path
 
 pygame.init()
