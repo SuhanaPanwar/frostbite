@@ -1,4 +1,5 @@
 import pygame
+import random
 
 pygame.init()
 
@@ -17,6 +18,11 @@ fireballs = []
 fireball_speed = 400
 facing = pygame.Vector2(1, 0)
 
+ice_pos = pygame.Vector2(650, 200)
+ice_speed = 180
+ice_alive = True
+ice_respawn_timer = 0
+
 while running:
     for event in pygame.event.get():
 
@@ -25,8 +31,8 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                fireballs.append([player_pos(), facing.copy()])
-    
+                fireballs.append([player_pos.copy(), facing.copy()])
+
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_w] or keys[pygame.K_UP]:
@@ -57,14 +63,53 @@ while running:
     if player_pos.y > 577:
          player_pos.y = 577  
 
+    if ice_alive:
+        ice_direction = player_pos - ice_pos
+
+        if ice_direction.length() > 0:
+            ice_direction = ice_direction.normalize()
+            ice_pos += ice_direction * ice_speed * dt
+
     for fireball in fireballs:
-        fireball.x += fireball_speed * dt
+        fireball[0] += fireball[1] *fireball_speed * dt
+
+    for fireball in fireballs[:]:
+        if (fireball[0].x < -8 or fireball[0].x > 808 or
+            fireball[0].y < -8 or fireball[0].y > 608):
+            fireballs.remove(fireball)
+
+    if ice_alive:
+        for fireball in fireballs[:]:
+            if fireball[0].distance_to(ice_pos) < 38:
+                fireballs.remove(fireball)
+                ice_alive = False
+                ice_respawn_timer = 1.0
+                print("Ice shard destroyed!")
+                break
+
+    if not ice_alive:
+        ice_respawn_timer -= dt
+
+        if ice_respawn_timer <= 0:
+            ice_pos = pygame.Vector2(
+            random.randint(50, 750),
+            random.randint(50, 550)
+            )
+
+            ice_alive = True
 
     screen.fill("lightsteelblue4")
     pygame.draw.circle(screen, "lightsalmon4", player_pos, 23)
 
     for fireball in fireballs:
-        pygame.draw.circle(screen, "orange", fireball, 8)
+        pygame.draw.circle(screen, "orange", fireball[0], 8)
+
+    if ice_alive:
+        pygame.draw.polygon(screen, "lightskyblue", [
+            (ice_pos.x - 25, ice_pos.y),
+            (ice_pos.x + 15, ice_pos.y - 15),
+            (ice_pos.x + 15, ice_pos.y + 15)
+    ])
 
     pygame.display.flip()
     dt = clock.tick(60) / 1000
