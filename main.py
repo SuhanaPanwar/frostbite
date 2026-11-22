@@ -8,20 +8,54 @@ pygame.display.set_caption("❊ 𝔣𝔯𝔬𝔰𝔱𝔟𝔦𝔱𝔢 ❊")
 
 running = True
 clock = pygame.time.Clock()
+font = pygame.font.SysFont("comicsansms", 30)
 
 player_pos = pygame.Vector2(400, 300)
 
 player_speed = 300
 dt = 0
 
+player_health = 5
+damage_cooldown = 0
+game_over = False
+
 fireballs = []
 fireball_speed = 400
 facing = pygame.Vector2(1, 0)
 
-ice_pos = pygame.Vector2(650, 200)
-ice_speed = 180
-ice_alive = True
-ice_respawn_timer = 0
+enemies = []
+spawn_timer = 2.0
+spawn_interval = 2.0
+max_enemies = 3
+
+def spawn_enemy(enemy_type, x, y):
+
+    enemy = {
+        "type": enemy_type,
+        "pos": pygame.Vector2(x, y),
+        "speed": 175,
+        "health": 1
+    }
+
+    enemies.append(enemy)
+
+def restart_game():
+    global player_pos, player_health, damage_cooldown, game_over, spawn_timer, dt, facing
+
+    player_pos = pygame.Vector2(400, 300)
+    player_health = 5
+    damage_cooldown = 0
+    game_over = False
+    dt = 0
+    facing = pygame.Vector2(1,0)
+
+    fireballs.clear()
+    enemies.clear()
+
+    spawn_timer = spawn_interval
+    spawn_enemy("frostling", 650, 200)
+
+spawn_enemy("frostling", 650, 200)
 
 while running:
     for event in pygame.event.get():
@@ -30,8 +64,22 @@ while running:
             running = False
 
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
+
+            if event.key == pygame.K_SPACE and not game_over:
                 fireballs.append([player_pos.copy(), facing.copy()])
+
+            if event.key == pygame.K_r and game_over:
+                restart_game()
+
+    if game_over:
+        screen.fill("black")
+        game_over_text = font.render("Game Over!", True, "white")
+        restart_text = font.render("Press [r] to restart", True, "white") 
+        screen.blit(game_over_text, (310, 250))
+        screen.blit(restart_text, (240, 300))
+        pygame.display.flip()
+        clock.tick(60)
+        continue
 
     keys = pygame.key.get_pressed()
 
@@ -63,12 +111,38 @@ while running:
     if player_pos.y > 577:
          player_pos.y = 577  
 
-    if ice_alive:
-        ice_direction = player_pos - ice_pos
+    spawn_timer -= dt
 
-        if ice_direction.length() > 0:
-            ice_direction = ice_direction.normalize()
-            ice_pos += ice_direction * ice_speed * dt
+    if spawn_timer <= 0:
+
+        if len(enemies) < max_enemies:
+            x = random.randint(50, 750)
+            y = random.randint(50, 550)
+
+            spawn_enemy("frostling", x, y)
+
+        spawn_timer = spawn_interval
+
+    for enemy in enemies:
+        direction = player_pos - enemy["pos"]
+
+        if direction.length() > 0:
+            direction = direction.normalize()
+            enemy["pos"] += direction * enemy["speed"] * dt
+
+    damage_cooldown -= dt
+
+    for enemy in enemies:
+        if player_pos.distance_to(enemy["pos"]) < 45:
+            if damage_cooldown <= 0:
+                player_health -= 1
+                damage_cooldown = 1.0
+                print("Player HP:", player_health)
+
+            if player_health <= 0 and not game_over:
+                player_health = 0
+                print("Game Over!")
+                game_over = True
 
     for fireball in fireballs:
         fireball[0] += fireball[1] *fireball_speed * dt
@@ -78,38 +152,37 @@ while running:
             fireball[0].y < -8 or fireball[0].y > 608):
             fireballs.remove(fireball)
 
-    if ice_alive:
+    for enemy in enemies[:]:
+
         for fireball in fireballs[:]:
-            if fireball[0].distance_to(ice_pos) < 38:
+            if fireball[0].distance_to(enemy["pos"]) < 38:
                 fireballs.remove(fireball)
-                ice_alive = False
-                ice_respawn_timer = 1.0
-                print("Ice shard destroyed!")
+                enemy["health"] -= 1
+
+                if enemy["health"] <= 0:
+                    enemies.remove(enemy)
+                    print("Enemy destroyed!")
+
                 break
 
-    if not ice_alive:
-        ice_respawn_timer -= dt
-
-        if ice_respawn_timer <= 0:
-            ice_pos = pygame.Vector2(
-            random.randint(50, 750),
-            random.randint(50, 550)
-            )
-
-            ice_alive = True
-
     screen.fill("lightsteelblue4")
+
+    hp_text = font.render(f"HP: {player_health}/5", True, "white")
+    screen.blit(hp_text, (20,20))
+
     pygame.draw.circle(screen, "lightsalmon4", player_pos, 23)
 
     for fireball in fireballs:
         pygame.draw.circle(screen, "orange", fireball[0], 8)
 
-    if ice_alive:
+    for enemy in enemies:
+        pos = enemy["pos"]
+
         pygame.draw.polygon(screen, "lightskyblue", [
-            (ice_pos.x - 25, ice_pos.y),
-            (ice_pos.x + 15, ice_pos.y - 15),
-            (ice_pos.x + 15, ice_pos.y + 15)
-    ])
+            (pos.x - 25, pos.y),
+            (pos.x + 15, pos.y - 15),
+            (pos.x + 15, pos.y + 15)
+        ])
 
     pygame.display.flip()
     dt = clock.tick(60) / 1000
