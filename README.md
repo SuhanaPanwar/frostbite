@@ -3,7 +3,7 @@
 for snowglobe irl event
 
 **live demo:** https://…
-**built by:** name (@github-handle), name (@github-handle)
+**built by:** @SuhanaPanwar
 
 ![screenshot of the project](screenshot.png)
 
